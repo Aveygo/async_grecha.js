@@ -1,48 +1,40 @@
 const LOREM = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
-function tag(name, ...children) {
+async function tag(name, ...children) {
     const result = document.createElement(name);
+
     for (const child of children) {
-        if (typeof(child) === 'string') {
-            result.appendChild(document.createTextNode(child));
+        if (child.constructor==Object) {
+            Object.keys(child).forEach(key => result.setAttribute(key, child[key]));
+        } else if (typeof(child) === 'string') {
+            result.innerHTML += child;
         } else {
-            result.appendChild(child);
+            new Promise(async () => {    
+                result.appendChild(await child);
+            });
         }
     }
-
-    result.att$ = function(name, value) {
-        this.setAttribute(name, value);
-        return this;
-    };
-
-    result.onclick$ = function(callback) {
-        this.onclick = callback;
-        return this;
-    };
 
     return result;
 }
 
-const MUNDANE_TAGS = ["canvas", "h1", "h2", "h3", "p", "a", "div", "span", "select"];
+const MUNDANE_TAGS = ["canvas", "h1", "h2", "h3", "p", "a", "div", "span", "select", "img", "input", "video", "source"];
 for (let tagName of MUNDANE_TAGS) {
     window[tagName] = (...children) => tag(tagName, ...children);
-}
-
-function img(src) {
-    return tag("img").att$("src", src);
-}
-
-function input(type) {
-    return tag("input").att$("type", type);
 }
 
 function router(routes) {
     let result = div();
 
-    function syncHash() {
+    async function syncHash() {
         let hashLocation = document.location.hash.split('#')[1];
+        
         if (!hashLocation) {
             hashLocation = '/';
+        }
+
+        if (hashLocation.includes("?")) {
+            hashLocation = hashLocation.split("?")[0]
         }
 
         if (!(hashLocation in routes)) {
@@ -53,17 +45,15 @@ function router(routes) {
             hashLocation = route404;
         }
 
-        result.replaceChildren(routes[hashLocation]());
+        (await result).replaceChildren(await routes[hashLocation]());
 
         return result;
     };
 
     syncHash();
+    result.refresh = syncHash;
 
     // TODO(#3): there is way to "destroy" an instance of the router to make it remove it's "hashchange" callback
     window.addEventListener("hashchange", syncHash);
-
-    result.refresh = syncHash;
-
     return result;
 }
