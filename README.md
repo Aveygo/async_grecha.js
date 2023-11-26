@@ -14,38 +14,68 @@ https://tsoding.github.io/grecha.js/example.html
   <head><title>Grecha.js</title></head>
   <body>
     <div id="entry"></div>
-    <script src="./grecha.js"></script>
-    <script>
-      const kasha = img("Kasha.png");
-      const kashaHard = img("KashaHard.gif");
-
-      let count = 0;
-      let hard = false;
-      const r = router({
-        "/": () => div(
-          h1("Grecha.js"),
-          div(a("Foo").att$("href", "#/foo")),
-          div(a("Bar").att$("href", "#/bar")),
-          div("Counter: "+count),
-          div(hard ? kashaHard : kasha).onclick$(function () {
-            count += 1;
-            hard = !hard
-            r.refresh();
-          }),
-        ),
-        "/foo": () => div(
-          h1("Foo"),
-          p(LOREM),
-          div(a("Home").att$("href", "#")),
-        ),
-        "/bar": () => div(
-          h1("Bar"),
-          p(LOREM),
-          div(a("Home").att$("href", "#"))
-        )
-      });
-      entry.appendChild(r);
-    </script>
+    <script src="./async_grecha.js"></script>
   </body>
 </html>
+
+<script>
+  
+const kasha = img({src: "Kasha.png"});
+const kashaHard = img({src: "KashaHard.gif"});
+
+let count = 0;
+let hard = false;
+
+function update() {
+  count += 1;
+  hard = !hard
+  window.dispatchEvent(new CustomEvent("hashchange"));
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function tile(i) {
+  await sleep(Math.random() * 2000)
+  return div(
+    i.toString()
+  )
+}
+
+function build() {
+  tiles = []
+  for (let i = 0; i < 10; i++) {
+    tiles.push(div(tile(i)))
+  }
+  return tiles
+}
+
+async function main() { 
+  const r = await router({
+    "/": async () => div(
+      h1("Grecha.js"),
+      div(a({href: "#/foo"}, "Foo")),
+      div(a({href: "#/bar"}, "Bar")),
+      div("Counter: " + count),
+      div({onclick: "update()"}, hard ? kashaHard : kasha),
+      ...build()
+    ),
+    "/foo": () => div(
+      h1("Foo"),
+      p(LOREM),
+      div(a( {href: "#"}, "Home")),
+    ),
+    "/bar": () => div(
+      h1("Bar"),
+      p(LOREM),
+      div(a({"href": "#"}, "Home"))
+    )
+  });
+  entry.appendChild(r);
+}
+
+main()
+
+</script>
 ```
