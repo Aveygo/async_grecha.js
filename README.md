@@ -4,6 +4,8 @@
 
 Simple Front-End JavaScript Framework. Originally designed for [emoteJAM](https://github.com/tsoding/emoteJAM). The name basically means [buckwheat](https://en.wikipedia.org/wiki/Buckwheat) in russian.
 
+Updated to add the ability to lazy load elements, might be useful for things.
+
 ## Quick Start
 
 https://tsoding.github.io/grecha.js/example.html
@@ -17,14 +19,14 @@ https://tsoding.github.io/grecha.js/example.html
     <script src="./async_grecha.js"></script>
   </body>
 </html>
-
 <script>
-  
+
 const kasha = img({src: "Kasha.png"});
 const kashaHard = img({src: "KashaHard.gif"});
 
 let count = 0;
 let hard = false;
+let built = build()
 
 function update() {
   count += 1;
@@ -38,9 +40,7 @@ function sleep(ms) {
 
 async function tile(i) {
   await sleep(Math.random() * 2000)
-  return div(
-    i.toString()
-  )
+  return div(i.toString())
 }
 
 function build() {
@@ -59,13 +59,15 @@ async function main() {
       div(a({href: "#/bar"}, "Bar")),
       div("Counter: " + count),
       div({onclick: "update()"}, hard ? kashaHard : kasha),
-      ...build()
+      ...built
     ),
+
     "/foo": () => div(
       h1("Foo"),
       p(LOREM),
-      div(a( {href: "#"}, "Home")),
+      div(a({href: "#"}, "Home")),
     ),
+
     "/bar": () => div(
       h1("Bar"),
       p(LOREM),
